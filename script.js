@@ -1,4 +1,8 @@
+const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:5000/api/agent' : `${window.location.protocol}//${window.location.hostname}:5000/api/agent`;
+const AGENT_STORAGE_KEY = 'sentinel-ai-agent-id';
+
 const state = {
+  agentId: localStorage.getItem(AGENT_STORAGE_KEY),
   agent: {
     name: 'Ada',
     domain: 'AI Security',
@@ -189,6 +193,109 @@ const renderActionPanel = () => {
 
 const updateCountdown = () => {
   renderActionPanel();
+};
+
+const safeFetch = async (url, options = {}) => {
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.warn('API fetch failed:', url, error.message);
+    return null;
+  }
+};
+
+const fetchAgentData = async () => {
+  if (!state.agentId) return;
+  const [statusRes, statsRes, feedRes, rejectionsRes, memoryRes, activityRes, decisionRes] = await Promise.all([
+    safeFetch(`${API_BASE}/status?agentId=${state.agentId}`),
+    safeFetch(`${API_BASE}/stats?agentId=${state.agentId}`),
+    safeFetch(`${API_BASE}/feed?agentId=${state.agentId}`),
+    safeFetch(`${API_BASE}/rejections?agentId=${state.agentId}`),
+    safeFetch(`${API_BASE}/memory?agentId=${state.agentId}`),
+    safeFetch(`${API_BASE}/activity?agentId=${state.agentId}`),
+    safeFetch(`${API_BASE}/latest-decision?agentId=${state.agentId}`)
+  ]);
+
+  if (statusRes?.status) {
+    state.agent.status = statusRes.status;
+    state.agent.name = statusRes.persona.name || state.agent.name;
+    state.agent.domain = statusRes.persona.domain || state.agent.domain;
+  }
+  if (statsRes) {
+    state.stats.discovered = statsRes.discovered ?? state.stats.discovered;
+    state.stats.published = statsRes.published ?? state.stats.published;
+    state.stats.rejected = statsRes.rejected ?? state.stats.rejected;
+    state.stats.memory = statsRes.memory ?? state.stats.memory;
+  }
+  if (feedRes?.posts) {
+    state.feed = feedRes.posts.map((item) => ({
+      title: item.text.length > 90 ? item.text.substring(0, 90) + '…' : item.text,
+      editorialScore: item.editorialScore ?? 'N/A',
+      status: 'Published',
+      whySelected: item.whySelected,
+      whyRelevant: item.whyRelevant,
+      source: item.sources?.[0] || 'Unknown source'
+    }));
+  }
+  if (rejectionsRes?.rejects) {
+    state.rejections = rejectionsRes.rejects.map((entry) => ({
+      topic: entry.topic,
+      score: entry.score,
+      reason: entry.reason,
+      createdAt: new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }));
+  }
+  if (memoryRes) {
+    state.memory.published = memoryRes.published?.map((item) => item.title) || state.memory.published;
+    state.memory.rejected = memoryRes.rejected?.map((item) => item.topic) || state.memory.rejected;
+  }
+  if (activityRes?.activity) {
+    state.activity = activityRes.activity.map((item) => ({
+      time: new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      event: item.message
+    }));
+  }
+  if (decisionRes?.topic) {
+    state.latestDecision = {
+      topic: decisionRes.topic,
+      score: decisionRes.score,
+      relevance: decisionRes.decision === 'publish' ? 'High' : 'Low',
+      novelty: 'N/A',
+      sourceQuality: decisionRes.sourceName || 'Unknown source',
+      decision: decisionRes.decision?.toUpperCase() || 'N/A',
+      reason: decisionRes.reason || ''
+    };
+  }
+
+  renderStats();
+  renderFeed();
+  renderRejections();
+  renderMemory();
+  renderDecision();
+  renderActivity();
+  renderPipeline();
+  renderActionPanel();
+};
+
+const initializeAgent = async () => {
+  if (state.agentId) return state.agentId;
+  const response = await safeFetch(`${API_BASE}/init`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ persona: { name: state.agent.name, domain: state.agent.domain } })
+  });
+  if (!response?.agentId) {
+    state.currentAction = 'Unable to initialize the backend agent; using local demo state.';
+    renderActionPanel();
+    return null;
+  }
+  state.agentId = response.agentId;
+  localStorage.setItem(AGENT_STORAGE_KEY, response.agentId);
+  return state.agentId;
 };
 
 const setStageState = (step, status, result) => {
@@ -457,7 +564,7 @@ const simulateAutonomousCycle = async () => {
   state.running = false;
 };
 
-const initializeDashboard = () => {
+const initializeDashboard = async () => {
   renderStats();
   renderPipeline();
   renderFeed();
@@ -466,7 +573,18 @@ const initializeDashboard = () => {
   renderDecision();
   renderActivity();
   renderActionPanel();
-  elements.runButton.addEventListener('click', simulateAutonomousCycle);
+  elements.runButton.addEventListener('click', async () => {
+    await simulateAutonomousCycle();
+    await fetchAgentData();
+  });
+
+  await initializeAgent();
+  if (state.agentId) {
+    state.currentAction = 'Agent initialized. Fetching latest backend data.';
+    renderActionPanel();
+    await fetchAgentData();
+  }
+
   setInterval(() => {
     renderActionPanel();
   }, 1000);
