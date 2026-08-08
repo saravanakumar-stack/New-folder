@@ -1,0 +1,324 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #060b17;
+  color: #e8eef8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body, html, #root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: radial-gradient(circle at top, rgba(54, 103, 178, 0.2), transparent 36%),
+    linear-gradient(180deg, #091325 0%, #04080f 100%);
+  color: #e7effc;
+  line-height: 1.5;
+}
+
+.app-shell {
+  padding: 24px;
+}
+
+.loading-state,
+.error-state {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  color: #cbd5e1;
+  font-size: 1.05rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.card {
+  background: rgba(15, 28, 53, 0.9);
+  border: 1px solid rgba(120, 151, 219, 0.12);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 24px 80px rgba(3, 10, 24, 0.25);
+}
+
+.header-card {
+  grid-column: span 12;
+}
+
+.stats-card {
+  grid-column: span 12;
+}
+
+.pipeline-card,
+.persona-card {
+  grid-column: span 6;
+}
+
+.feed-card {
+  grid-column: span 12;
+}
+
+.decision-card,
+.rejection-card,
+.memory-card,
+.activity-card {
+  grid-column: span 6;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #7b95d1;
+  margin-bottom: 10px;
+}
+
+.header-card h1 {
+  margin: 0;
+  font-size: clamp(2rem, 2.4vw, 3rem);
+}
+
+.subtext,
+.persona-summary,
+.persona-details {
+  color: #c5cee0;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  font-weight: 600;
+  color: #a5d7ff;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #39d27d;
+  box-shadow: 0 0 14px rgba(57, 210, 125, 0.35);
+}
+
+.persona-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  background: rgba(15, 28, 53, 0.75);
+  border-radius: 18px;
+  padding: 18px;
+  min-height: 110px;
+}
+
+.stat-card span {
+  display: block;
+  color: #8aa9d1;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+}
+
+.stat-card strong {
+  font-size: 2rem;
+  display: block;
+}
+
+.pipeline-flow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pipeline-step {
+  flex: 1;
+  min-width: 110px;
+  background: rgba(10, 21, 41, 0.75);
+  border-radius: 16px;
+  padding: 14px 16px;
+  text-align: center;
+  color: #9bb6d7;
+}
+
+.pipeline-step.active {
+  border: 1px solid #5c8be6;
+  color: #f0f9ff;
+}
+
+.pipeline-arrow {
+  display: inline-block;
+  margin-top: 10px;
+  color: #5b7fd5;
+}
+
+.persona-card .persona-details {
+  display: grid;
+  gap: 12px;
+}
+
+.persona-details div {
+  background: rgba(12, 23, 43, 0.75);
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.post-card,
+.rejection-item,
+.timeline-item {
+  background: rgba(8, 16, 32, 0.9);
+  border: 1px solid rgba(94, 136, 231, 0.1);
+  border-radius: 20px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.post-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: #8da9d6;
+  margin-bottom: 14px;
+  font-size: 0.9rem;
+}
+
+.post-text,
+.post-rationale p,
+.rejection-item p,
+.timeline-item p {
+  margin: 0;
+  color: #d8e2f5;
+}
+
+.post-rationale {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.post-rationale strong,
+.post-sources strong,
+.decision-summary strong {
+  display: block;
+  color: #e2eeff;
+  margin-bottom: 6px;
+}
+
+.post-sources ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.post-sources li {
+  margin-bottom: 8px;
+}
+
+.post-sources a {
+  color: #81b0ff;
+  text-decoration: none;
+}
+
+.memory-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.memory-grid ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.memory-grid li {
+  margin-bottom: 10px;
+}
+
+.timeline-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.timeline-item {
+  display: grid;
+  gap: 10px;
+}
+
+.timeline-item span {
+  color: #7aa1ff;
+  font-size: 0.85rem;
+}
+
+.decision-summary {
+  display: grid;
+  gap: 14px;
+}
+
+.decision-rationale {
+  margin-top: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.empty-state {
+  color: #7c8fa7;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 1200px) {
+  .stats-card,
+  .pipeline-card,
+  .persona-card,
+  .decision-card,
+  .rejection-card,
+  .memory-card,
+  .activity-card {
+    grid-column: span 12;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid {
+    padding: 0;
+  }
+
+  .person a,
+  .feed-card,
+  .rejection-card,
+  .memory-card,
+  .activity-card,
+  .decision-card {
+    padding: 18px;
+  }
+}

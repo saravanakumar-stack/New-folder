@@ -3,9 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    
-</body>
+    <title>SentinelAI Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <div class="header-panel">
+        <section class="hero-card">
+          <div class="hero-copy">
+            <p class="eyebrow">SentinelAI</p>
+            <h1>Autonomous AI Security Research Agent</h1>
+            <p>SentinelAI discovers, evaluates, remembers and publishes high-quality AI security research insights autonomously.</p>
+          </div>
+          <div class="action-row">
+            <div class="hero-status">
+              <div class="status-chip"><span class="dot"></span>AUTONOMOUS AGENT RUNNING</div>
+            </div>
+            <button id="run-cycle" class="primary-button">Run Autonomous Cycle</button>
+          </div>
+          <div class="persona-panel-summary">
+            <div><strong>Persona</strong><span>Ada</span></div>
+            <div><strong>Domain</strong><span>AI Security</span></div>
+            <div><strong>Role</strong><span>Autonomous AI Security Research Analyst</span></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="grid-layout">
+        <div class="stats-grid">
+          <section class="stat-card"><span>TOPICS DISCOVERED</span><strong id="topics-discovered">0</strong></section>
+          <section class="stat-card"><span>PUBLISHED POSTS</span><strong id="published-posts">0</strong></section>
+          <section class="stat-card"><span>REJECTED TOPICS</span><strong id="rejected-topics">0</strong></section>
+          <section class="stat-card"><span>MEMORY RECORDS</span><strong id="memory-records">0</strong></section>
+        </div>
+
+        <section class="pipeline-card">
+          <h2>Autonomous Pipeline</h2>
+          <div id="pipeline-list" class="pipeline-steps"></div>
+        </section>
+      </div>
+
+      <div class="grid-layout">
+        <div class="main-panel">
+          <section class="card-panel">
+            <h2>Latest Autonomous Posts</h2>
+            <div id="feed-list"></div>
+          </section>
+
+          <section class="card-panel">
+            <h2>Editorial Rejection Log</h2>
+            <div id="rejection-list"></div>
+          </section>
+        </div>
+
+        <div class="side-panel">
+          <section class="card-panel">
+            <h2>Agent Memory</h2>
+            <div class="memory-grid">
+              <div class="memory-section">
+                <h4>Published memories</h4>
+                <ul id="memory-published"></ul>
+              </div>
+              <div class="memory-section">
+                <h4>Rejected memories</h4>
+                <ul id="memory-rejected"></ul>
+              </div>
+              <div class="memory-section">
+                <h4>Duplicate sources prevented</h4>
+                <ul id="memory-duplicates"></ul>
+              </div>
+            </div>
+          </section>
+
+          <section class="card-panel">
+            <h2>Latest Editorial Decision</h2>
+            <div class="post-entry">
+              <div class="post-header"><h3 id="decision-topic"></h3></div>
+              <div class="post-meta">
+                <span id="decision-score"></span>
+                <span id="decision-relevance"></span>
+                <span id="decision-novelty"></span>
+              </div>
+              <div class="post-rationale">
+                <div><strong>Source quality</strong><p id="decision-source"></p></div>
+                <div><strong>Decision</strong><p id="decision-outcome"></p></div>
+                <div><strong>Reason</strong><p id="decision-reason"></p></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card-panel persona-card">
+            <h2>Persona</h2>
+            <ul>
+              <li><strong>Name</strong><span>Ada</span></li>
+              <li><strong>Domain</strong><span>AI Security</span></li>
+              <li><strong>Role</strong><span>Autonomous AI Security Research Analyst</span></li>
+              <li><strong>Writing style</strong><span>Analytical · Evidence-based · Technical · Concise · Non-clickbait</span></li>
+              <li><strong>Audience</strong><span>Developers · AI engineers · Security researchers · Technology professionals</span></li>
+            </ul>
+          </section>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <h2>Autonomous Activity Timeline</h2>
+        <ul id="activity-list" class="timeline-list"></ul>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
 </html>
