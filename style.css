@@ -234,8 +234,13 @@ textarea {
   border: 1px solid rgba(101, 140, 254, 0.08);
 }
 
-.pipeline-step.active {
+.pipeline-step.active,
+.pipeline-step.running {
   background: linear-gradient(90deg, rgba(58, 99, 255, 0.14), rgba(26, 58, 123, 0.3));
+}
+
+.pipeline-step.completed {
+  background: linear-gradient(90deg, rgba(62, 204, 148, 0.12), rgba(29, 77, 53, 0.22));
 }
 
 .pipeline-step .stage-meta {

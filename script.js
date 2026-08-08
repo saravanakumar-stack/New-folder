@@ -176,10 +176,6 @@ const renderPipeline = () => {
 const renderActionPanel = () => {
   elements.currentActionMessage.textContent = state.currentAction;
   elements.lastCycle.textContent = state.lastCycle;
-  elements.nextCycle.textContent = state.nextCycle || '—';
-};
-
-const updateCountdown = () => {
   if (!state.nextCycleAt) {
     elements.nextCycle.textContent = 'Pending';
     return;
@@ -189,6 +185,10 @@ const updateCountdown = () => {
   const minutes = Math.floor(diff / 60);
   const seconds = diff % 60;
   elements.nextCycle.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
+const updateCountdown = () => {
+  renderActionPanel();
 };
 
 const setStageState = (step, status, result) => {
@@ -312,40 +312,76 @@ const updateStats = () => {
 
 const simulateDiscover = () => {
   state.currentStage = 'DISCOVER';
-  appendActivity('Discovered candidate AI security topics from feeds.');
-  updateStats();
+  state.currentAction = 'Finding fresh AI Security topics in active feeds.';
+  setStageState('DISCOVER', 'RUNNING', 'Scanning candidate sources...');
+  renderActionPanel();
   renderPipeline();
-  renderActivity();
+};
+
+const completeDiscover = () => {
+  setStageState('DISCOVER', 'COMPLETED', '12 topics found');
+  appendActivity('Discovered candidate AI security topics from feeds.');
+  state.stats.discovered += 12;
+  renderStats();
+  renderPipeline();
 };
 
 const simulateEvaluate = () => {
   state.currentStage = 'EVALUATE';
+  state.currentAction = 'Scoring topics with AI editorial judgment.';
+  setStageState('EVALUATE', 'RUNNING', 'Analyzing candidate quality...');
+  renderActionPanel();
+  renderPipeline();
+};
+
+const completeEvaluate = () => {
+  setStageState('EVALUATE', 'COMPLETED', '4 high-value topics');
+  state.stats.rejected += 8;
   appendActivity('Evaluated candidates for domain relevance and technical significance.');
-  state.stats.rejected += 1;
   renderStats();
   renderPipeline();
-  renderActivity();
 };
 
 const simulateMemory = () => {
   state.currentStage = 'MEMORY';
-  appendActivity('Checked memory and duplicate history for the selected topic.');
+  state.currentAction = 'Verifying candidate topics against memory and duplicates.';
+  setStageState('MEMORY', 'RUNNING', 'Checking history and existing content...');
+  renderActionPanel();
+  renderPipeline();
+};
+
+const completeMemory = () => {
+  setStageState('MEMORY', 'COMPLETED', '2 duplicates blocked');
   state.memory.duplicates.unshift('Duplicate source URL prevented publication');
   if (state.memory.duplicates.length > 4) state.memory.duplicates.pop();
+  appendActivity('Checked memory and duplicate history for the selected topic.');
   renderPipeline();
   renderMemory();
-  renderActivity();
 };
 
 const simulateDecide = () => {
   state.currentStage = 'DECIDE';
+  state.currentAction = 'Choosing publish or reject for the best candidate.';
+  setStageState('DECIDE', 'RUNNING', 'Applying editorial rules...');
+  renderActionPanel();
+  renderPipeline();
+};
+
+const completeDecide = () => {
+  setStageState('DECIDE', 'COMPLETED', '2 publish / 8 reject');
   appendActivity('Decided the highest-value AI security topic to publish.');
   renderPipeline();
-  renderActivity();
 };
 
 const simulatePublish = () => {
   state.currentStage = 'PUBLISH';
+  state.currentAction = 'Generating and storing the selected post.';
+  setStageState('PUBLISH', 'RUNNING', 'Generating post...');
+  renderActionPanel();
+  renderPipeline();
+};
+
+const completePublish = () => {
   const candidate = {
     title: 'Emerging LLM jailbreak vector targets system prompt boundaries',
     editorialScore: 91,
@@ -364,12 +400,17 @@ const simulatePublish = () => {
     decision: 'PUBLISH',
     reason: 'The topic is a recent AI security exploit pattern with immediate implications for safe model deployment.'
   };
-  appendActivity('Published an autonomous posts with complete editorial rationale.');
+  appendActivity('Published an autonomous post with complete editorial rationale.');
+  setStageState('PUBLISH', 'COMPLETED', 'Post generated and stored');
   state.stats.published += 1;
   state.stats.memory += 1;
   state.memory.published.unshift(candidate.title);
   if (state.memory.published.length > 5) state.memory.published.pop();
+  state.currentAction = 'Autonomous cycle completed successfully.';
+  state.lastCycle = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  state.nextCycleAt = new Date(Date.now() + 120000);
   renderPipeline();
+  renderActionPanel();
   renderFeed();
   renderDecision();
   renderMemory();
@@ -382,16 +423,34 @@ const simulateAutonomousCycle = async () => {
   state.running = true;
   elements.runButton.disabled = true;
   elements.runButton.textContent = 'Running Autonomous Cycle...';
+  state.currentAction = 'Starting autonomous workflow.';
+  state.lastCycle = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  state.nextCycleAt = new Date(Date.now() + 120000);
+  renderActionPanel();
+  renderPipeline();
+
+  resetPipeline();
+  renderPipeline();
 
   simulateDiscover();
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  await new Promise((resolve) => setTimeout(resolve, 900));
+  completeDiscover();
+
   simulateEvaluate();
-  await new Promise((resolve) => setTimeout(resolve, 850));
+  await new Promise((resolve) => setTimeout(resolve, 900));
+  completeEvaluate();
+
   simulateMemory();
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  await new Promise((resolve) => setTimeout(resolve, 900));
+  completeMemory();
+
   simulateDecide();
   await new Promise((resolve) => setTimeout(resolve, 900));
+  completeDecide();
+
   simulatePublish();
+  await new Promise((resolve) => setTimeout(resolve, 1200));
+  completePublish();
 
   elements.runButton.disabled = false;
   elements.runButton.textContent = 'Run Autonomous Cycle';
@@ -406,7 +465,11 @@ const initializeDashboard = () => {
   renderMemory();
   renderDecision();
   renderActivity();
+  renderActionPanel();
   elements.runButton.addEventListener('click', simulateAutonomousCycle);
+  setInterval(() => {
+    renderActionPanel();
+  }, 1000);
 };
 
 initializeDashboard();
