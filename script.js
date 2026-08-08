@@ -11,8 +11,17 @@ const state = {
     rejected: 9,
     memory: 23
   },
-  pipeline: ['DISCOVER', 'EVALUATE', 'MEMORY', 'DECIDE', 'PUBLISH'],
-  currentStage: 'DISCOVER',
+  pipeline: [
+    { step: 'DISCOVER', description: 'Finding fresh AI Security topics', status: 'WAITING', result: 'Awaiting discovery.' },
+    { step: 'EVALUATE', description: 'AI editorial scoring', status: 'WAITING', result: 'Awaiting evaluation.' },
+    { step: 'MEMORY', description: 'Checking previously published content', status: 'WAITING', result: 'Awaiting memory check.' },
+    { step: 'DECIDE', description: 'Publish or reject', status: 'WAITING', result: 'Awaiting decision.' },
+    { step: 'PUBLISH', description: 'Generate and store post', status: 'WAITING', result: 'Awaiting publication.' }
+  ],
+  currentStage: null,
+  currentAction: 'Waiting for the next cycle.',
+  lastCycle: '—',
+  nextCycleAt: null,
   feed: [
     {
       title: 'New adversarial prompt injection technique exposes vector gaps in large language models',
@@ -125,6 +134,9 @@ const elements = {
   decisionOutcome: document.querySelector('#decision-outcome'),
   decisionReason: document.querySelector('#decision-reason'),
   activityContainer: document.querySelector('#activity-list'),
+  currentActionMessage: document.querySelector('#current-action-message'),
+  lastCycle: document.querySelector('#last-cycle'),
+  nextCycle: document.querySelector('#next-cycle'),
   runButton: document.querySelector('#run-cycle')
 };
 
@@ -137,12 +149,61 @@ const renderStats = () => {
 
 const renderPipeline = () => {
   elements.pipelineList.innerHTML = '';
-  state.pipeline.forEach((step) => {
+  state.pipeline.forEach((stage) => {
     const stepElement = document.createElement('div');
-    stepElement.className = `pipeline-step ${step === state.currentStage ? 'active' : ''}`;
-    stepElement.innerHTML = `<span>${step}</span><span class="stage-label">${step === state.currentStage ? 'RUNNING' : 'WAITING'}</span>`;
+    stepElement.className = `pipeline-step ${stage.status.toLowerCase()}`;
+    let statusMarkup = `<span class="stage-status ${stage.status.toLowerCase()}">${stage.status}</span>`;
+    if (stage.status === 'RUNNING') {
+      statusMarkup = `<span class="stage-status running"><span class="spinner"></span>RUNNING</span>`;
+    } else if (stage.status === 'COMPLETED') {
+      statusMarkup = `<span class="stage-status completed">✓ COMPLETED</span>`;
+    }
+
+    stepElement.innerHTML = `
+      <div>
+        <strong>${stage.step}</strong>
+        <span class="stage-description">${stage.description}</span>
+      </div>
+      <div class="stage-meta">
+        ${statusMarkup}
+        <span class="stage-result">${stage.result}</span>
+      </div>
+    `;
     elements.pipelineList.appendChild(stepElement);
   });
+};
+
+const renderActionPanel = () => {
+  elements.currentActionMessage.textContent = state.currentAction;
+  elements.lastCycle.textContent = state.lastCycle;
+  elements.nextCycle.textContent = state.nextCycle || '—';
+};
+
+const updateCountdown = () => {
+  if (!state.nextCycleAt) {
+    elements.nextCycle.textContent = 'Pending';
+    return;
+  }
+  const now = new Date();
+  const diff = Math.max(0, Math.floor((state.nextCycleAt - now) / 1000));
+  const minutes = Math.floor(diff / 60);
+  const seconds = diff % 60;
+  elements.nextCycle.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
+const setStageState = (step, status, result) => {
+  const stage = state.pipeline.find((stageItem) => stageItem.step === step);
+  if (!stage) return;
+  stage.status = status;
+  if (result !== undefined) stage.result = result;
+};
+
+const resetPipeline = () => {
+  state.pipeline.forEach((stage) => {
+    stage.status = 'WAITING';
+    stage.result = `Awaiting ${stage.step.toLowerCase()} stage.`;
+  });
+  state.currentStage = null;
 };
 
 const buildPostItem = (post) => {
