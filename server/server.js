@@ -19,19 +19,32 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use('/api/agent', agentRoutes);
+app.use(express.static(path.resolve(__dirname, '..')));
 
-app.get('/', (req, res) => {
+app.get('/api-status', (req, res) => {
   res.json({ status: 'SentinelAI backend running' });
 });
 
-connectDB()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`SentinelAI backend listening on port ${PORT}`);
-    });
-    startScheduler();
-  })
-  .catch((error) => {
-    console.error('Server startup failed', error);
-    process.exit(1);
+const startServer = async () => {
+  try {
+    await connectDB();
+  } catch (error) {
+    console.error('Initial database connection failed. Server starting in degraded mode.');
+  }
+
+  const server = app.listen(PORT, () => {
+    console.log(`SentinelAI backend listening on port ${PORT}`);
   });
+
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      console.error(`[ERROR] Port ${PORT} is already in use. Terminate the process using port ${PORT} or check running background instances.`);
+    } else {
+      console.error(`[ERROR] Server error:`, error.message);
+    }
+  });
+
+  startScheduler();
+};
+
+startServer();

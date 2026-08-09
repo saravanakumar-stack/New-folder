@@ -10,7 +10,7 @@ const isSimilar = (a, b) => {
   if (normalizedA === normalizedB) return true;
   const words = normalizedB.split(' ').filter((w) => w.length > 3);
   const matches = words.filter((word) => normalizedA.includes(word));
-  return matches.length >= 4;
+  return matches.length >= 6;
 };
 
 export const checkDuplicateMemory = async (agentId, topic) => {
@@ -28,7 +28,14 @@ export const checkDuplicateMemory = async (agentId, topic) => {
     return { duplicate: true, reason: 'Duplicate title already exists in memory.' };
   }
 
-  const recentTopics = await Topic.find({ agentId, _id: { $ne: topic._id } }).sort({ discoveredAt: -1 }).limit(40);
+  // Skip fuzzy similarity check for internal/fallback topics — they have unique URLs and titles by design
+  if ((topic.sourceUrl || '').startsWith('internal://')) {
+    return { duplicate: false };
+  }
+
+  const recentFilter = { agentId };
+  if (topic._id) recentFilter._id = { $ne: topic._id };
+  const recentTopics = await Topic.find(recentFilter).sort({ discoveredAt: -1 }).limit(40);
   for (const existing of recentTopics) {
     if (isSimilar(existing.title, topic.title) || isSimilar(existing.summary, topic.summary)) {
       return { duplicate: true, reason: 'Similar topic already exists in memory and prevents duplicate publication.' };

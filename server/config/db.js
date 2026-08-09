@@ -17,13 +17,13 @@ if (!MONGODB_URI) {
 
 export const connectDB = async () => {
   try {
-    await mongoose.connect(MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-    console.log('Connected to MongoDB with credentials loaded from server/.env');
+    mongoose.connection.on('connected', () => console.log('[DATABASE] Connected to MongoDB locally.'));
+    mongoose.connection.on('error', (err) => console.error('[DATABASE] Connection error:', err.message));
+    mongoose.connection.on('disconnected', () => console.warn('[DATABASE] Disconnected from MongoDB.'));
+
+    await mongoose.connect(MONGODB_URI);
   } catch (error) {
-    console.error('MongoDB connection error:', error.message);
+    console.error('[DATABASE] Startup connection error:', error.message);
     throw error;
   }
 };

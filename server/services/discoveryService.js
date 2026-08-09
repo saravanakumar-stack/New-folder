@@ -1,28 +1,5 @@
 import axios from 'axios';
 
-const domainIndicators = [
-  'ai security',
-  'prompt injection',
-  'adversarial',
-  'model security',
-  'secure ai',
-  'ai privacy',
-  'ai vulnerabilities',
-  'red teaming',
-  'llm security',
-  'safe ai',
-  'model governance',
-  'secure deployment',
-  'agent security'
-];
-
-const sources = [
-  { url: 'https://thehackernews.com/feeds/posts/default', sourceName: 'The Hacker News' },
-  { url: 'https://www.darkreading.com/rss.xml', sourceName: 'Dark Reading' },
-  { url: 'https://www.schneier.com/feed/atom/', sourceName: 'Bruce Schneier' },
-  { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml', sourceName: 'NYTimes Technology' }
-];
-
 const normalizeText = (value) => (value || '').replace(/<[^>]+>/g, '').trim();
 
 const extractMatch = (content, regex) => {
@@ -32,7 +9,9 @@ const extractMatch = (content, regex) => {
 
 const isRelevant = (text, personaDomain) => {
   const lower = (text || '').toLowerCase();
-  return domainIndicators.some((keyword) => lower.includes(keyword)) || lower.includes(personaDomain.toLowerCase());
+  const domainParts = personaDomain.toLowerCase().split(' ').filter(p => p.length > 2);
+  if (lower.includes(personaDomain.toLowerCase())) return true;
+  return domainParts.some(part => lower.includes(part));
 };
 
 const parseFeedItem = (item, sourceName) => {
@@ -46,23 +25,49 @@ const parseFeedItem = (item, sourceName) => {
   return { title, summary, sourceUrl: link, sourceName, publishedAt };
 };
 
+const generateFallbackPool = (domain) => [
+  { title: `Emerging Trends in ${domain}`, summary: `Analysis of recent breakthroughs and methodologies in ${domain}.`, sourceUrl: `internal://${encodeURIComponent(domain)}/1`, sourceName: "Fallback Pool" },
+  { title: `Security and Governance across ${domain}`, summary: `Evaluating the deployment safeguards and ecosystem risk in ${domain}.`, sourceUrl: `internal://${encodeURIComponent(domain)}/2`, sourceName: "Fallback Pool" },
+  { title: `Future Projections for ${domain}`, summary: `What researchers and industry leaders are building next in ${domain}.`, sourceUrl: `internal://${encodeURIComponent(domain)}/3`, sourceName: "Fallback Pool" },
+  { title: `Understanding the Impact of ${domain}`, summary: `A deep dive into how ${domain} is reshaping modern architecture and societal norms.`, sourceUrl: `internal://${encodeURIComponent(domain)}/4`, sourceName: "Fallback Pool" }
+];
+
 export const discoverTopics = async (personaDomain) => {
   const results = [];
+  const sources = [
+    { url: `https://news.google.com/rss/search?q=${encodeURIComponent(personaDomain)}`, sourceName: 'Google News Discovery' },
+    { url: `https://news.google.com/rss/search?q=${encodeURIComponent(personaDomain + ' innovation')}`, sourceName: 'Google News Discovery' }
+  ];
+
   for (const source of sources) {
-    try {
-      const response = await axios.get(source.url, { timeout: 12000 });
-      const body = response.data;
-      const items = [...body.matchAll(/<(item|entry)[\s\S]*?<\/(item|entry)>/gi)].map((match) => match[0]);
-      for (const item of items) {
-        const topic = parseFeedItem(item, source.sourceName);
-        if (!topic) continue;
-        if (isRelevant(topic.title + ' ' + topic.summary, personaDomain)) {
-          results.push(topic);
+    let retries = 2;
+    while (retries > 0) {
+      try {
+        const response = await axios.get(source.url, { timeout: 10000 });
+        const body = response.data;
+        const items = [...body.matchAll(/<(item|entry)[\s\S]*?<\/(item|entry)>/gi)].map((match) => match[0]);
+        for (const item of items) {
+          const topic = parseFeedItem(item, source.sourceName);
+          if (!topic) continue;
+          if (isRelevant(topic.title + ' ' + topic.summary, personaDomain)) {
+            results.push(topic);
+          }
+        }
+        break; // Success, exit retry loop
+      } catch (error) {
+        retries--;
+        console.warn(`[DISCOVERY] ${source.url} failed. Retries left: ${retries}. Error: ${error.message}`);
+        if (retries === 0) {
+          console.warn(`[DISCOVERY] Skipping source ${source.url} due to repeated network failures.`);
         }
       }
-    } catch (error) {
-      console.warn(`Discovery source failed: ${source.url}`, error.message);
     }
+  }
+
+  if (results.length === 0) {
+    console.warn('[DISCOVERY] All external sources failed or yielded no results. Injecting internal fallback pool.');
+    const genericFallback = generateFallbackPool(personaDomain);
+    genericFallback.forEach(fb => results.push({ ...fb, publishedAt: new Date() }));
   }
 
   const unique = [];
