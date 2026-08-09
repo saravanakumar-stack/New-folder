@@ -1,4 +1,12 @@
-const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:5000/api/agent' : `${window.location.protocol}//${window.location.hostname}:5000/api/agent`;
+const API_BASE = (() => {
+  if (window.location.protocol === 'file:') {
+    return 'http://localhost:5000/api/agent';
+  }
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return `${window.location.protocol}//${window.location.hostname}:5000/api/agent`;
+  }
+  return '/api/agent';
+})();
 const AGENT_STORAGE_KEY = 'sentinel-ai-agent-id';
 
 const state = {
