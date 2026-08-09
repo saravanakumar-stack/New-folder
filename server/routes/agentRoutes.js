@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import crypto from 'crypto';
 import Agent from '../models/Agent.js';
 import Topic from '../models/Topic.js';
@@ -9,12 +10,22 @@ import { runAutonomousCycle } from '../services/autonomousAgent.js';
 
 const router = express.Router();
 
+router.use((req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    console.warn(`[DATABASE] Request to ${req.originalUrl} rejected because DB is unavailable.`);
+    return res.status(503).json({ error: 'Database temporarily unavailable' });
+  }
+  next();
+});
+
 router.post('/init', async (req, res) => {
   try {
-    const { persona } = req.body;
+    const { persona, minimumScore } = req.body;
     if (!persona || !persona.name || !persona.domain) {
       return res.status(400).json({ error: 'persona.name and persona.domain are required' });
     }
+
+    const scoreValue = minimumScore !== undefined ? Math.max(0, Math.min(100, parseInt(minimumScore, 10))) : 80;
 
     let agent = await Agent.findOne({ personaName: persona.name, personaDomain: persona.domain });
     if (!agent) {
@@ -23,6 +34,7 @@ router.post('/init', async (req, res) => {
         agentId,
         personaName: persona.name,
         personaDomain: persona.domain,
+        minimumScore: scoreValue,
         status: 'running',
         lastCycleAt: new Date()
       });
@@ -30,7 +42,7 @@ router.post('/init', async (req, res) => {
       await ActivityLog.create({
         agentId,
         eventType: 'AGENT_INITIALIZED',
-        message: 'Agent initialized and autonomous processing started.'
+        message: `Agent initialized with minimum quality score ${scoreValue} and autonomous processing started.`
       });
 
       runAutonomousCycle(agentId);
@@ -39,15 +51,16 @@ router.post('/init', async (req, res) => {
 
     if (agent.status !== 'running') {
       agent.status = 'running';
+      agent.minimumScore = scoreValue;
       await agent.save();
       await ActivityLog.create({
         agentId: agent.agentId,
         eventType: 'AGENT_INITIALIZED',
-        message: 'Existing agent resumed running state.'
+        message: `Existing agent resumed running state with minimum quality score ${scoreValue}.`
       });
-      runAutonomousCycle(agent.agentId);
     }
 
+    runAutonomousCycle(agent.agentId);
     return res.json({ agentId: agent.agentId });
   } catch (error) {
     console.error('Agent init error:', error.message);
@@ -89,7 +102,8 @@ router.get('/status', async (req, res) => {
       persona: {
         name: agent.personaName,
         domain: agent.personaDomain
-      }
+      },
+      minimumScore: agent.minimumScore || 80
     });
   } catch (error) {
     console.error('Status error:', error.message);

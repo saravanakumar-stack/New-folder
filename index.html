@@ -7,7 +7,59 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div class="app-shell">
+    <div id="init-overlay" class="modal-overlay">
+      <div class="modal-card">
+        <h2>Create Your Autonomous Agent</h2>
+        <p>Configure your autonomous AI editorial analyst instance.</p>
+        
+        <div class="form-group">
+          <label for="agent-name">Agent Name</label>
+          <input type="text" id="agent-name" placeholder="e.g., Ada, Nova" value="Ada">
+        </div>
+        
+        <div class="form-group">
+          <label for="agent-domain">Domain</label>
+          <select id="agent-domain">
+            <option value="" disabled selected>Select a domain ▼</option>
+            <option value="Artificial Intelligence">Artificial Intelligence</option>
+            <option value="AI Security">AI Security</option>
+            <option value="Cybersecurity">Cybersecurity</option>
+            <option value="Technology">Technology</option>
+            <option value="Finance">Finance</option>
+            <option value="Healthcare">Healthcare</option>
+            <option value="Education">Education</option>
+            <option value="Business">Business</option>
+            <option value="Climate & Sustainability">Climate & Sustainability</option>
+            <option value="Space & Science">Space & Science</option>
+            <option value="Gaming">Gaming</option>
+            <option value="Sports">Sports</option>
+            <option value="Data Science">Data Science</option>
+            <option value="Robotics">Robotics</option>
+            <option value="Software Development">Software Development</option>
+            <option value="Custom Domain">Custom Domain</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="custom-domain-group" style="display: none;">
+          <label for="custom-domain">Enter Custom Domain</label>
+          <input type="text" id="custom-domain" placeholder="e.g., Quantum Computing">
+        </div>
+
+        <div class="form-group">
+          <label for="minimum-score">Minimum Quality Score</label>
+          <div class="score-control">
+            <input type="range" id="minimum-score" min="0" max="100" value="80" class="score-slider">
+            <span id="score-display" class="score-value">80/100</span>
+          </div>
+          <p class="helper-text">Only topics meeting this score should be eligible for publication.</p>
+        </div>
+
+        <button id="create-agent-btn" class="primary-button full-width">Create Autonomous Agent</button>
+        <p id="init-error" class="error-msg" style="display: none;"></p>
+      </div>
+    </div>
+
+    <div class="app-shell" style="display: none;">
       <div class="header-panel">
         <section class="hero-card">
           <div class="hero-copy">
@@ -22,9 +74,10 @@
             <button id="run-cycle" class="primary-button">Run Autonomous Cycle</button>
           </div>
           <div class="persona-panel-summary">
-            <div><strong>Persona</strong><span>Ada</span></div>
-            <div><strong>Domain</strong><span>AI Security</span></div>
-            <div><strong>Role</strong><span>Autonomous AI Security Research Analyst</span></div>
+            <div><strong>Persona</strong><span id="header-persona-name">-</span></div>
+            <div><strong>Domain</strong><span id="header-persona-domain">-</span></div>
+            <div><strong>Minimum Score</strong><span id="header-minimum-score">-</span></div>
+            <div><strong>Role</strong><span id="header-persona-role">Autonomous Research Analyst</span></div>
           </div>
         </section>
       </div>
@@ -105,11 +158,12 @@
           <section class="card-panel persona-card">
             <h2>Persona</h2>
             <ul>
-              <li><strong>Name</strong><span>Ada</span></li>
-              <li><strong>Domain</strong><span>AI Security</span></li>
-              <li><strong>Role</strong><span>Autonomous AI Security Research Analyst</span></li>
+              <li><strong>Name</strong><span id="card-persona-name">-</span></li>
+              <li><strong>Domain</strong><span id="card-persona-domain">-</span></li>
+              <li><strong>Minimum Score</strong><span id="card-minimum-score">-</span></li>
+              <li><strong>Role</strong><span id="card-persona-role">Autonomous Research Analyst</span></li>
               <li><strong>Writing style</strong><span>Analytical · Evidence-based · Technical · Concise · Non-clickbait</span></li>
-              <li><strong>Audience</strong><span>Developers · AI engineers · Security researchers · Technology professionals</span></li>
+              <li><strong>Audience</strong><span>General Professionals · Industry Leaders</span></li>
             </ul>
           </section>
         </div>

@@ -608,3 +608,214 @@ textarea {
     gap: 10px;
   }
 }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(4, 7, 15, 0.85);
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(11, 22, 44, 0.95);
+  border: 1px solid rgba(132, 169, 255, 0.15);
+  border-radius: 32px;
+  padding: 40px;
+  box-shadow: 0 32px 80px rgba(0, 5, 12, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.modal-card h2 {
+  margin: 0 0 8px;
+  color: #fff;
+  font-size: 1.6rem;
+}
+
+.modal-card p {
+  color: #9cb0e6;
+  font-size: 0.95rem;
+  margin: 0 0 32px;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-group label {
+  display: block;
+  color: #b0c9ff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  background: rgba(5, 11, 22, 0.8);
+  border: 1px solid rgba(96, 140, 255, 0.2);
+  border-radius: 14px;
+  padding: 14px 18px;
+  color: #fff;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #3f80ff;
+  box-shadow: 0 0 0 3px rgba(63, 128, 255, 0.15);
+}
+
+.form-group select {
+  appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2388A4E6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+}
+
+.form-group select option {
+  background: #06101f;
+  color: #e9eef8;
+}
+
+.primary-button.full-width {
+  width: 100%;
+  margin-top: 12px;
+  padding: 18px;
+  font-size: 1.05rem;
+}
+
+.error-msg {
+  display: block;
+  color: #ff8c8c;
+  background: rgba(255, 60, 60, 0.1);
+  padding: 12px;
+  border-radius: 12px;
+  margin-top: 20px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+.score-control {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 12px 0;
+}
+
+.score-slider {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, #5191ff, #22e7ff);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.score-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #6da0ff;
+  cursor: pointer;
+  border: 2px solid #2a4a8f;
+  box-shadow: 0 0 12px rgba(109, 160, 255, 0.4);
+}
+
+.score-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #6da0ff;
+  cursor: pointer;
+  border: 2px solid #2a4a8f;
+  box-shadow: 0 0 12px rgba(109, 160, 255, 0.4);
+}
+
+.score-value {
+  min-width: 80px;
+  text-align: right;
+  font-weight: 600;
+  color: #6da0ff;
+  font-size: 1.1rem;
+}
+
+.helper-text {
+  font-size: 0.85rem;
+  color: #8fa3c0;
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.modal-card.success-card {
+  max-width: 500px;
+}
+
+.modal-card.error-card {
+  max-width: 450px;
+}
+
+.success-details {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(109, 160, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(116, 151, 249, 0.1);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #8fa3c0;
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  color: #e9eef8;
+  font-weight: 500;
+}
+
+.success-links {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(109, 160, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.success-links h4 {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6da0ff;
+  font-weight: 600;
+}
+
+.access-link-container {
+  width: 100%;
+}

@@ -32,8 +32,38 @@ export const runAutonomousCycle = async (agentId) => {
       return;
     }
 
-    const createdTopics = [];
+    const newCandidates = [];
+    let duplicateCount = 0;
     for (const candidate of discoveredTopics) {
+      const memoryCheck = await checkDuplicateMemory(agentId, candidate);
+      if (memoryCheck.duplicate) {
+        duplicateCount++;
+      } else {
+        newCandidates.push(candidate);
+      }
+    }
+
+    if (duplicateCount > 0) {
+      console.log(`[MEMORY] Filtered ${duplicateCount} duplicate candidate topic(s) already in memory.`);
+    }
+
+    if (!newCandidates.length) {
+      const now = new Date();
+      const timeStamp = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      const uniqueSuffix = Math.random().toString(36).substring(2, 7);
+      const freshTopic = {
+        title: `${agent.personaDomain} Research Analysis - ${now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} ${timeStamp} #${uniqueSuffix}`,
+        summary: `Autonomous intelligence synthesis on recent developments, risk vectors, and mitigation frameworks in ${agent.personaDomain}. Cycle ID: ${uniqueSuffix}.`,
+        sourceUrl: `internal://${encodeURIComponent(agent.personaDomain.toLowerCase())}/${Date.now()}`,
+        sourceName: 'SentinelAI Research Engine',
+        publishedAt: now
+      };
+      newCandidates.push(freshTopic);
+      console.log(`[DISCOVERY] All RSS topics were duplicates. Generated fallback topic: ${freshTopic.title}`);
+    }
+
+    const createdTopics = [];
+    for (const candidate of newCandidates) {
       const topic = await Topic.create({
         ...candidate,
         discoveredAt: new Date(),
@@ -42,12 +72,13 @@ export const runAutonomousCycle = async (agentId) => {
       createdTopics.push(topic);
     }
 
-    await logActivity(agentId, 'TOPICS_DISCOVERED', `Discovered ${createdTopics.length} candidate topics.`, { count: createdTopics.length });
+    await logActivity(agentId, 'TOPICS_DISCOVERED', `Discovered ${createdTopics.length} new candidate topics.`, { count: createdTopics.length });
 
     const publishCandidates = [];
     for (const topic of createdTopics) {
       const memoryResult = await checkDuplicateMemory(agentId, topic);
       if (memoryResult.duplicate) {
+        console.warn(`[MEMORY] Duplicate found during evaluation: ${memoryResult.reason}`);
         await Topic.findByIdAndUpdate(topic._id, {
           editorialDecision: 'reject',
           editorialScore: 0,
@@ -61,7 +92,9 @@ export const runAutonomousCycle = async (agentId) => {
       const evaluation = await evaluateTopic(topic, {
         name: agent.personaName,
         domain: agent.personaDomain
-      });
+      }, agent.minimumScore || 80);
+
+      console.log(`[EVALUATION] Topic: "${topic.title}" - Score: ${evaluation.score}, Decision: ${evaluation.decision}`);
 
       await Topic.findByIdAndUpdate(topic._id, {
         editorialScore: evaluation.score,
@@ -70,6 +103,7 @@ export const runAutonomousCycle = async (agentId) => {
       });
 
       if (evaluation.decision === 'publish') {
+        console.log(`[DECISION] Publish candidate accepted: ${topic.title}`);
         publishCandidates.push({ topic, evaluation });
       } else {
         await logRejectedTopic({ agentId, topicId: topic._id, reason: evaluation.rejectionReason, score: evaluation.score });
@@ -86,6 +120,7 @@ export const runAutonomousCycle = async (agentId) => {
     const selectedCandidate = publishCandidates[0];
     const finalMemoryCheck = await checkDuplicateMemory(agentId, selectedCandidate.topic);
     if (finalMemoryCheck.duplicate) {
+      console.warn(`[MEMORY] Final validation blocked duplicate: ${finalMemoryCheck.reason}`);
       await Topic.findByIdAndUpdate(selectedCandidate.topic._id, {
         editorialDecision: 'reject',
         editorialReason: finalMemoryCheck.reason
@@ -96,6 +131,7 @@ export const runAutonomousCycle = async (agentId) => {
       return;
     }
 
+    console.log(`[DECISION] Final topic selected: ${selectedCandidate.topic.title}`);
     await logActivity(agentId, 'TOPIC_SELECTED', `Selected topic for publish: ${selectedCandidate.topic.title}`, { topicId: selectedCandidate.topic._id, score: selectedCandidate.evaluation.score });
 
     const generatedPost = await generatePostContent(selectedCandidate.topic, {
@@ -120,6 +156,7 @@ export const runAutonomousCycle = async (agentId) => {
       publishedAt: new Date()
     });
 
+    console.log(`[PUBLISH] Stored new post successfully.`);
     await logActivity(agentId, 'POST_GENERATED', 'Generated published post content.', { postId: publishedPost._id });
     await logActivity(agentId, 'POST_PUBLISHED', 'Published selected topic to feed.', { postId: publishedPost._id });
 
@@ -135,7 +172,7 @@ export const runAutonomousCycle = async (agentId) => {
 
     await logActivity(agentId, 'AUTONOMOUS_CYCLE_COMPLETED', 'Autonomous cycle completed successfully.');
   } catch (error) {
-    console.error('Autonomous cycle failure:', error.message);
+    console.error('[SCHEDULER] Autonomous cycle horizontal failure:', error.message);
     await logActivity(agentId, 'AUTONOMOUS_CYCLE_FAILED', `Cycle failed: ${error.message}`, {
       stack: error.stack
     });
