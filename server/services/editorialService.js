@@ -3,13 +3,39 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'openai/gpt-oss-120b';
+const OPENAI_URL = 'https://api.openai.com/v1/responses';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = 'gemini-1.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
-const callGemini = async (prompt) => {
+const callAI = async (prompt) => {
+  if (OPENAI_API_KEY) {
+    const response = await axios.post(OPENAI_URL, {
+      model: OPENAI_MODEL,
+      input: prompt,
+      temperature: 0.15,
+      max_output_tokens: 420
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${OPENAI_API_KEY}`
+      }
+    });
+
+    const output = response.data?.output?.[0]?.content;
+    if (!output) {
+      throw new Error('Invalid OpenAI response for editorial evaluation');
+    }
+
+    return Array.isArray(output)
+      ? output.map((item) => (typeof item === 'string' ? item : item?.text || '')).join('')
+      : String(output);
+  }
+
   if (!GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY is required for editorial evaluation');
+    throw new Error('OPENAI_API_KEY or GEMINI_API_KEY is required for editorial evaluation');
   }
 
   const response = await axios.post(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
