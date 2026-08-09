@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use('/api/agent', agentRoutes);
-app.use(express.static(path.resolve(__dirname, '..')));
+app.use(express.static(path.resolve(__dirname, '../Frontend/legacy')));
 
 app.get('/api-status', (req, res) => {
   res.json({ status: 'SentinelAI backend running' });
